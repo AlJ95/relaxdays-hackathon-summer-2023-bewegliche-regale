@@ -1,0 +1,10 @@
+empty = "🟨"
+worker = "👷"
+package = "📦"
+package_on_target = "🎁"
+worker_on_target = "🙋"
+
+down = "⏬"
+left = "⏪"
+up = "⏫"
+right = "⏩"
