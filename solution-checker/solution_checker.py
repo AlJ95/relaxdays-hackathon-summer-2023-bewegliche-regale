@@ -73,7 +73,7 @@ def pre_step_validation(lager, step):
                     raise Exception("Can't move right, because the package would crash")
 
 
-def apply_instructions(lager: list[str], instructions: list[list[str]]) -> list[str] | None:
+def apply_instructions(lager: list[str], instructions: list[list[str]]) -> list[str]:
     for step in instructions:
         try:
             lager = apply_step(lager, step)
