@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Lager Interaktion</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+            text-align: center;
+            width: 50px; /* Hinzugefügt: feste Breite für Tabellenzellen */
+            height: 50px; /* Hinzugefügt: feste Höhe für Tabellenzellen */;
+        }
+        select {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lager Interaktion</h1>
+    <table id="lagerTable"></table>
+    <script>
+        // Lagerstatus und Richtungen initialisieren
+        
+        function generateRandomBoard(rows, cols) {
+  const numCells = rows * cols;
+  const depotCells = Math.floor(numCells * 0.02);
+  const freeCells = Math.floor(numCells * 0.02);
+  const orderCells = Math.floor(numCells * 0.06);
+  const occupiedCells = numCells - depotCells - freeCells - orderCells;
+
+  const board = new Array(rows).fill(null).map(() => new Array(cols).fill('📦'));
+
+  function randomPos() {
+    return {
+      row: Math.floor(Math.random() * rows),
+      col: Math.floor(Math.random() * cols),
+    };
+  }
+
+  function placeSymbol(symbol, count) {
+    for (let i = 0; i < count; i++) {
+      let pos = randomPos();
+      while (board[pos.row][pos.col] !== '📦') {
+        pos = randomPos();
+      }
+      board[pos.row][pos.col] = symbol;
+    }
+  }
+
+  placeSymbol('👷', depotCells);
+  placeSymbol('🙋', depotCells);
+  placeSymbol('🟨', freeCells);
+  placeSymbol('🎁', orderCells);
+
+  return board;
+}
+const rowcount = 10
+const colcount = 20
+let lager = generateRandomBoard(rowcount, colcount);
+let directions = new Array(rowcount).fill(null).map(() => new Array(colcount).fill('🟨'));
+    
+        // Funktionen zum Aktualisieren der HTML-Elemente
+        function updateLagerTable() {
+            const table = document.getElementById("lagerTable");
+            table.innerHTML = "";
+            for (let rowIndex = 0; rowIndex < lager.length; rowIndex++) {
+                const tr = document.createElement("tr");
+                for (let colIndex = 0; colIndex < lager[rowIndex].length; colIndex++) {
+                    const td = document.createElement("td");
+                    td.textContent = lager[rowIndex][colIndex];
+                    if ("🟨🙋".indexOf(lager[rowIndex][colIndex]) == -1) {
+                        const select = document.createElement("select");
+                        select.id = `direction-${rowIndex}-${colIndex}`;
+                        const options = ["🟨", "⏪", "⏩", "⏫", "⏬"];
+                        for (const optionValue of options) {
+                            const option = document.createElement("option");
+                            option.value = optionValue;
+                            option.textContent = optionValue;
+                            select.appendChild(option);
+                        }
+                        select.value = directions[rowIndex][colIndex];
+                        select.addEventListener("change", () => {
+                            directions[rowIndex][colIndex] = select.value;
+                        });
+                        td.appendChild(select);
+                    }
+                    tr.appendChild(td);
+                }
+                table.appendChild(tr);
+            }
+        }
+
+        // Funktion zum Anwenden der ausgewählten Richtungen und Aktualisieren des Lagerstatus
+        function applySelectedDirections() {
+            try {
+                const newLager = apply_step(lager, directions);
+                directions = new Array(rowcount).fill(null).map(() => new Array(colcount).fill('🟨'));
+                lager.splice(0, lager.length, ...newLager);
+                updateLagerTable();
+            } catch (error) {
+                alert(`Fehler: ${error.message}`);
+            }
+        }
+
+        function process_package(current, incoming) {
+    if (current === "🙋" || current === "👷") {
+        return incoming === "📦" || incoming === "👷" ? "👷" : "🙋";
+    } else {
+        if (incoming === "📦" || incoming === "👷") {
+            return "📦";
+        }
+    }
+    return "🎁";
+}
+
+function apply_step(lager, step) {
+    const next_lager = lager.map(row => row.map(() => ""));
+    pre_step_validation(lager, step);
+    for (let row = 0; row < lager.length; row++) {
+        for (let col = 0; col < lager[row].length; col++) {
+            if (step[row][col] !== "🟨") {
+                if (lager[row][col] === '👷') {
+                    next_lager[row][col] = "🙋";
+                }
+            }
+            if (row > 0 && step[row - 1][col] === "⏬") {
+                next_lager[row][col] += process_package(lager[row][col], lager[row - 1][col]);
+            }
+            if (row < lager.length - 1 && step[row + 1][col] === "⏫") {
+                next_lager[row][col] += process_package(lager[row][col], lager[row + 1][col]);
+            }
+            if (col > 0 && step[row][col - 1] === "⏩") {
+                next_lager[row][col] += process_package(lager[row][col], lager[row][col - 1]);
+            }
+            if (col < lager[row].length - 1 && step[row][col + 1] === "⏪") {
+                next_lager[row][col] += process_package(lager[row][col], lager[row][col + 1]);
+            }
+            if (step[row][col] === "🟨") {
+                next_lager[row][col] += lager[row][col];
+            }
+            if (next_lager[row][col] === "🙋🙋") {
+                next_lager[row][col] = "🙋";
+            }
+            if (next_lager[row][col] === "🙋👷" || next_lager[row][col] === "👷🙋") {
+                next_lager[row][col] = "👷";
+            }
+            if (next_lager[row][col].length === 4) {
+                next_lager[row][col] = next_lager[row][col].replace("🟨", "");
+            }
+
+            if (next_lager[row][col].length > 2) {
+                throw new Error("Can't move because packages would crash");
+            }
+        }
+    }
+    return next_lager.map(next_row => next_row.map(c => c !== "" ? c : "🟨"));
+}
+
+function pre_step_validation(lager, step) {
+  for (let row = 0; row < lager.length; row++) {
+    for (let col = 0; col < lager[row].length; col++) {
+      if (step[row][col] !== "🟨") {
+        if (!"📦🎁👷‍️".includes(lager[row][col])) {
+          throw new Error("Can't move without package.");
+        }
+        if (step[row][col] === "⏬" && (row === lager.length - 1 || !"🟨⏬".includes(step[row + 1][col]))) {
+          throw new Error(
+            "Can't move down, because that package is moving in a different direction or it's out of bounds"
+          );
+        }
+        if (step[row][col] === "⏪" && (col === 0 || !"🟨⏪".includes(step[row][col - 1]))) {
+          throw new Error(
+            "Can't move left, because that package is moving in a different direction or it's out of bounds"
+          );
+        }
+        if (step[row][col] === "⏫" && (row === 0 || !"🟨⏫".includes(step[row - 1][col]))) {
+          throw new Error(
+            "Can't move up, because that package is moving in a different direction or it's out of bounds"
+          );
+        }
+        if (step[row][col] === "⏩" && (col === lager[row].length - 1 || !"🟨⏩".includes(step[row][col + 1]))) {
+          throw new Error(
+            "Can't move right, because that package is moving in a different direction or it's out of bounds"
+          );
+        }
+        if (step[row][col] === "⏬" && "📦🎁👷‍️".includes(lager[row + 1][col]) && step[row + 1][col] === "🟨") {
+          throw new Error("Can't move down, because the package would crash");
+        }
+        if (step[row][col] === "⏪" && "📦🎁👷‍️".includes(lager[row][col - 1]) && step[row][col - 1] === "🟨") {
+          throw new Error("Can't move left, because the package would crash");
+        }
+        if (step[row][col] === "⏫" && "📦🎁👷‍️".includes(lager[row - 1][col]) && step[row - 1][col] === "🟨") {
+          throw new Error("Can't move up, because the package would crash");
+        }
+        if (step[row][col] === "⏩" && "📦🎁👷‍️".includes(lager[row][col + 1]) && step[row][col + 1] === "🟨") {
+          throw new Error("Can't move right, because the package would crash");
+        }
+      }
+    }
+  }
+}
+
+
+
+        // Initialisieren der HTML-Elemente
+        updateLagerTable();
+    </script>
+    <button onclick="applySelectedDirections()">Schritte anwenden</button>
+</body>
+</html>
