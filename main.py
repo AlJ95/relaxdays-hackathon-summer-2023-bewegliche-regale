@@ -12,7 +12,7 @@ FILENAME = 'instance{i}.json'
 
 def load_json(i) -> np.ndarray:
     """
-    Loades one of the json files from the data directory
+    Loads one of the json files from the data directory.
     :param i: the number of the file to load
     :return: the data from the file
     """
@@ -43,5 +43,32 @@ def animate_solution(data: list[np.ndarray]):
 
 
 if __name__ == '__main__':
-    input_data = load_json(1)
+    input_data = load_json(0)
     print_data(input_data)
+
+
+"""
+📦📦📦📦📦📦📦
+📦📦🟨🎁📦📦🙋
+📦📦⏫📦📦📦📦
+"""
+"""
+📦📦📦📦📦📦📦
+📦📦📦🎁📦📦🙋
+📦📦🟨⏪⏪📦📦
+"""
+"""
+📦📦📦📦📦📦📦
+📦📦📦🎁⏬📦🙋
+📦📦📦📦🟨📦📦
+"""
+"""
+📦📦📦📦📦📦📦
+📦📦📦⏩🟨📦🙋
+📦📦📦📦📦📦📦
+"""
+"""
+📦📦📦📦📦📦📦
+📦📦📦🟨🎁📦🙋
+📦📦📦📦📦📦📦
+"""
